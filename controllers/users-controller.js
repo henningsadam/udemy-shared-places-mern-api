@@ -37,6 +37,13 @@ exports.getUserById = (req, res, next) => {
 
 exports.createUser = (req, res, next) => {
   const { name, email, password } = req.body;
+
+  const existingUser = DUMMY_USERS.find(u => u.email === email)
+  if (existingUser) {
+    const error = new HttpError('Email already in use.', 422)
+    return next(error)
+  }
+
   const newUser = {
     id: uuid(),
     name,
