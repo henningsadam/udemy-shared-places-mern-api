@@ -90,7 +90,7 @@ exports.updatePlace = (req, res, next) => {
     const error = new HttpError('Invalid data', 422);
     return next(error);
   }
-  
+
   const placeId = req.params.placeId;
   const { title, description } = req.body;
 
@@ -114,6 +114,12 @@ exports.updatePlace = (req, res, next) => {
 exports.deletePlace = (req, res, next) => {
   // Lookup and reteive the place object using the ID given in the request
   const placeId = req.params.placeId;
+
+  const existingPlace = DUMMY_PLACES.find((p) => p.id === placeId);
+  if (!existingPlace) {
+    const error = new HttpError('No place found.', 404);
+    return next(error);
+  }
 
   // remove that item from the array
   const DUMMY_PLACES = DUMMY_PLACES.filter((p) => p.id !== placeId);
