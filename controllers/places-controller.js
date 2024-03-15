@@ -1,4 +1,5 @@
 const HttpError = require('../models/http-error');
+const getCoordinatesForAddress = require('../utils/location');
 const { validationResult } = require('express-validator');
 const { v4: uuid } = require('uuid');
 
@@ -62,14 +63,22 @@ exports.getPlacesByUserId = (req, res, next) => {
   res.json({ places });
 };
 
-exports.createPlace = (req, res, next) => {
+exports.createPlace = async (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     const error = new HttpError('Invalid data', 422);
     return next(error);
   }
 
-  const { title, description, coordinates, address, creatorId } = req.body;
+  const { title, description, address, creatorId } = req.body;
+
+  let coordinates;
+  try {
+    coordinates = await getCoordinatesForAddress(address);
+  } catch (error) {
+    return next(error);
+  }
+
   const newPlace = {
     id: uuid(),
     title,
