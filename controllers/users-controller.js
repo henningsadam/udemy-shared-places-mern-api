@@ -36,6 +36,12 @@ exports.getUserById = (req, res, next) => {
 };
 
 exports.createUser = (req, res, next) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    const error = new HttpError('Invalid data', 422);
+    return next(error);
+  }
+
   const { name, email, password } = req.body;
 
   const existingUser = DUMMY_USERS.find(u => u.email === email)

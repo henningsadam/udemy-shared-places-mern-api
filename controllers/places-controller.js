@@ -1,4 +1,5 @@
 const HttpError = require('../models/http-error');
+const { validationResult } = require('express-validator');
 const { v4: uuid } = require('uuid');
 
 let DUMMY_PLACES = [
@@ -62,6 +63,12 @@ exports.getPlacesByUserId = (req, res, next) => {
 };
 
 exports.createPlace = (req, res, next) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    const error = new HttpError('Invalid data', 422);
+    return next(error);
+  }
+
   const { title, description, coordinates, address, creatorId } = req.body;
   const newPlace = {
     id: uuid(),
@@ -78,6 +85,12 @@ exports.createPlace = (req, res, next) => {
 };
 
 exports.updatePlace = (req, res, next) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    const error = new HttpError('Invalid data', 422);
+    return next(error);
+  }
+  
   const placeId = req.params.placeId;
   const { title, description } = req.body;
 
