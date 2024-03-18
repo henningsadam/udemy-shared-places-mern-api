@@ -4,41 +4,6 @@ const { validationResult } = require('express-validator');
 const { v4: uuid } = require('uuid');
 const Place = require('../models/places-model');
 
-// let DUMMY_PLACES = [
-//   {
-//     id: 'p1',
-//     title: 'Empire State Building',
-//     description: 'A really large building in New York City.',
-//     location: {
-//       lat: 40.7484474,
-//       lng: -73.9871516,
-//     },
-//     address: '20 W 34th St New York, NY 10001',
-//     creatorId: 'u1',
-//   },
-//   {
-//     id: 'p2',
-//     title: 'White House',
-//     description: 'The big white house in Washington DC',
-//     location: {
-//       lat: 40.7484474,
-//       lng: -73.9871516,
-//     },
-//     address: '20 W 34th St New York, NY 10001',
-//     creatorId: 'u2',
-//   },
-//   {
-//     id: 'p3',
-//     title: 'Another place',
-//     description: 'A another building somewhere in the world',
-//     location: {
-//       lat: 40.7484474,
-//       lng: -73.9871516,
-//     },
-//     address: '20 W 34th St New York, NY 10001',
-//     creatorId: 'u1',
-//   },
-// ];
 
 exports.getPlaceById = async (req, res, next) => {
   const placeId = req.params.placeId;
