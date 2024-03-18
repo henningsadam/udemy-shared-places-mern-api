@@ -1,9 +1,9 @@
 const HttpError = require('../models/http-error');
 const getCoordinatesForAddress = require('../utils/location');
 const { validationResult } = require('express-validator');
-const { v4: uuid } = require('uuid');
 const Place = require('../models/places-model');
-
+const User = require('../models/users-model');
+const mongoose = require('mongoose');
 
 exports.getPlaceById = async (req, res, next) => {
   const placeId = req.params.placeId;
@@ -77,11 +77,33 @@ exports.createPlace = async (req, res, next) => {
     creator,
   });
 
+  let user;
   try {
-    await newPlace.save();
+    user = await User.findById(creator);
   } catch (err) {
     console.log(err);
-    const error = new HttpError('Place failed to save to database.', 500);
+    const error = new HttpError(
+      'Place failed to retrieve user data from database.',
+      500
+    );
+    return next(error);
+  }
+
+  if (!user) {
+    const error = new HttpError('User not found.', 500);
+    return next(error);
+  }
+
+  try {
+    const session = await mongoose.startSession();
+    session.startTransaction();
+    await newPlace.save({ session: session });
+    user.places.push(newPlace);
+    await user.save({ session: session });
+    session.commitTransaction();
+  } catch (err) {
+    console.log(err);
+    const error = new HttpError('Failed to save place to database.', 500);
     return next(error);
   }
 
@@ -134,7 +156,7 @@ exports.deletePlace = async (req, res, next) => {
 
   let existingPlace;
   try {
-    existingPlace = await Place.findById(placeId);
+    existingPlace = await Place.findById(placeId).populate('creator');
   } catch (err) {
     console.log(err);
     const error = new HttpError('Failed to retrieve place from database.', 500);
@@ -147,7 +169,12 @@ exports.deletePlace = async (req, res, next) => {
 
   // Delete that item
   try {
-    await Place.deleteOne({ _id: placeId });
+    const session = await mongoose.startSession();
+    session.startTransaction();
+    await Place.deleteOne({ _id: placeId }).session(session);
+    existingPlace.creator.places.pull(existingPlace);
+    await existingPlace.creator.save({ session: session });
+    await session.commitTransaction();
   } catch (err) {
     console.log(err);
     const error = new HttpError('Failed to delete place from database.', 500);

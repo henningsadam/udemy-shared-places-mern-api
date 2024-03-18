@@ -1,5 +1,4 @@
 const HttpError = require('../models/http-error');
-const { v4: uuid } = require('uuid');
 const { validationResult } = require('express-validator');
 const User = require('../models/users-model');
 
@@ -55,7 +54,7 @@ exports.createUser = async (req, res, next) => {
     return next(error);
   }
 
-  const { name, email, password, places } = req.body;
+  const { name, email, password } = req.body;
 
   let existingUser;
   try {
@@ -79,7 +78,7 @@ exports.createUser = async (req, res, next) => {
     email,
     imageUrl: 'https://randomuser.me/api/portraits/men/8.jpg',
     password,
-    places,
+    places: []
   });
 
   try {
