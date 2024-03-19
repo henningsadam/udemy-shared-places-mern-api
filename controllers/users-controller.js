@@ -5,7 +5,7 @@ const User = require('../models/users-model');
 exports.getUsers = async (req, res, next) => {
   let users;
   try {
-    users = await User.find({}, 'email password');
+    users = await User.find({}, 'email places imageUrl name');
   } catch (err) {
     console.log(err);
     const error = new HttpError(
@@ -73,12 +73,18 @@ exports.createUser = async (req, res, next) => {
     return next(error);
   }
 
+  const generateRandomProfileUrl = () => {
+    const randomNumber = Math.random().toString().split('.')[1][0];
+    const url = `https://randomuser.me/api/portraits/men/${randomNumber}.jpg`;
+    return url;
+  };
+
   const newUser = new User({
     name,
     email,
-    imageUrl: 'https://randomuser.me/api/portraits/men/8.jpg',
+    imageUrl: generateRandomProfileUrl(),
     password,
-    places: []
+    places: [],
   });
 
   try {
@@ -120,5 +126,10 @@ exports.login = async (req, res, next) => {
     return next(error);
   }
 
-  res.status(200).json({ message: 'Successfully logged in.' });
+  res
+    .status(200)
+    .json({
+      message: 'Successfully logged in.',
+      user: existingUser.toObject({ getters: true }),
+    });
 };
