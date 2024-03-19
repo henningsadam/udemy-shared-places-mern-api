@@ -2,9 +2,9 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const HttpError = require('./models/http-error');
 const mongoose = require('mongoose');
-require('dotenv').config()
+require('dotenv').config();
 
-const DB_CONNECTION_STRING = `mongodb+srv://${process.env.MONGO_DB_USER}:${process.env.MONGO_DB_PASSWORD}@udemy-sharing-places.atzaqq1.mongodb.net/places?retryWrites=true&w=majority&appName=udemy-sharing-places`
+const DB_CONNECTION_STRING = `mongodb+srv://${process.env.MONGO_DB_USER}:${process.env.MONGO_DB_PASSWORD}@udemy-sharing-places.atzaqq1.mongodb.net/places?retryWrites=true&w=majority&appName=udemy-sharing-places`;
 
 const placesRoutes = require('./routes/places-routes');
 const usersRoutes = require('./routes/users-routes');
@@ -12,6 +12,17 @@ const usersRoutes = require('./routes/users-routes');
 const app = express();
 
 app.use(bodyParser.json());
+
+// Configure security policies by setting headers (e.g. CORS)
+app.use((req, res, next) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader(
+    'Access-Control-Allow-Headers',
+    'Origin, X-Requested-With, Content-Type, Accept, Authorization'
+  );
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE');
+  next();
+});
 
 app.use('/api/places', placesRoutes);
 app.use('/api/users', usersRoutes);
