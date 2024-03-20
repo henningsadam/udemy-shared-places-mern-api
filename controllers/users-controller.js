@@ -73,16 +73,11 @@ exports.createUser = async (req, res, next) => {
     return next(error);
   }
 
-  const generateRandomProfileUrl = () => {
-    const randomNumber = Math.random().toString().split('.')[1][0];
-    const url = `https://randomuser.me/api/portraits/men/${randomNumber}.jpg`;
-    return url;
-  };
 
   const newUser = new User({
     name,
     email,
-    imageUrl: generateRandomProfileUrl(),
+    imageUrl: req.file.path,
     password,
     places: [],
   });

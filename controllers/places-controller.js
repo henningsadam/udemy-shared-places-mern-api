@@ -1,4 +1,5 @@
 const HttpError = require('../models/http-error');
+const fs = require('fs');
 const getCoordinatesForAddress = require('../utils/location');
 const { validationResult } = require('express-validator');
 const Place = require('../models/places-model');
@@ -72,8 +73,7 @@ exports.createPlace = async (req, res, next) => {
     description,
     address,
     location: coordinates,
-    imageUrl:
-      'https://cdn.pixabay.com/photo/2017/03/27/15/01/canyon-2179250_1280.jpg',
+    imageUrl: req.file.path,
     creator,
   });
 
@@ -167,6 +167,8 @@ exports.deletePlace = async (req, res, next) => {
     return next(error);
   }
 
+  const imagePath = existingPlace.imageUrl;
+
   // Delete that item
   try {
     const session = await mongoose.startSession();
@@ -180,6 +182,10 @@ exports.deletePlace = async (req, res, next) => {
     const error = new HttpError('Failed to delete place from database.', 500);
     return next(error);
   }
+
+  fs.unlink(imagePath, (error) => {
+    console.log(error);
+  });
 
   // send success
   res.status(200).json({ message: 'Successfully deleted place.' });
