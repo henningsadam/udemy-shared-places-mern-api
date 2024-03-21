@@ -130,6 +130,12 @@ exports.updatePlace = async (req, res, next) => {
     return next(error);
   }
 
+  // Check to confirm that the user updating this place is the original creator
+  if (existingPlace.creator.toString() !== req.userData.userId) {
+    const error = new HttpError('Not allowed to edit this place.', 401);
+    return next(error);
+  }
+
   // update the properties of that object using the props in the request
   existingPlace.title = title;
   existingPlace.description = description;
@@ -164,6 +170,12 @@ exports.deletePlace = async (req, res, next) => {
   }
   if (!existingPlace) {
     const error = new HttpError('No place found.', 404);
+    return next(error);
+  }
+
+  // Check to confirm that the user deleting this place is the original creator
+  if (existingPlace.creator.id !== req.userData.userId) {
+    const error = new HttpError('Not allowed to delete this place.', 401);
     return next(error);
   }
 

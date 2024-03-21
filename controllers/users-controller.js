@@ -1,6 +1,9 @@
 const HttpError = require('../models/http-error');
 const { validationResult } = require('express-validator');
 const User = require('../models/users-model');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+require('dotenv').config();
 
 exports.getUsers = async (req, res, next) => {
   let users;
@@ -73,12 +76,21 @@ exports.createUser = async (req, res, next) => {
     return next(error);
   }
 
+  // Hash the password before saving to the database
+  let hashedPassword;
+  try {
+    hashedPassword = await bcrypt.hash(password, 12);
+  } catch (error) {
+    console.log(error);
+    const err = new HttpError('Could not create user.', 500);
+    return next(err);
+  }
 
   const newUser = new User({
     name,
     email,
     imageUrl: req.file.path,
-    password,
+    password: hashedPassword,
     places: [],
   });
 
@@ -90,9 +102,34 @@ exports.createUser = async (req, res, next) => {
     return next(error);
   }
 
+  let token;
+  try {
+    token = jwt.sign(
+      { userId: newUser.id, email: newUser.email },
+      process.env.JWT_PRIVATE_KEY,
+      { expiresIn: '1h' }
+    );
+  } catch (err) {
+    console.log(err);
+    const error = new HttpError(
+      'Unable to create user. Please try again later.',
+      500
+    );
+    return next(error);
+  }
+
+  const userData = {
+    userId: newUser.id,
+    name: newUser.name,
+    email: newUser.email,
+    imageUrl: newUser.imageUrl,
+    places: newUser.places,
+  };
+
   res.status(201).json({
     message: 'Successfully created new user.',
-    user: newUser.toObject({ getters: true }),
+    user: userData,
+    token: token,
   });
 };
 
@@ -116,15 +153,47 @@ exports.login = async (req, res, next) => {
     return next(error);
   }
 
-  if (existingUser.password !== password) {
-    const error = new HttpError('Invalid password.', 403);
+  let isValidPassword;
+  try {
+    isValidPassword = await bcrypt.compare(password, existingUser.password);
+  } catch (error) {
+    console.log(error);
+    const err = new HttpError('Unable to log in.', 500);
+    return next(err);
+  }
+
+  if (!isValidPassword) {
+    const err = new HttpError('Invalid password.', 403);
+    return next(err);
+  }
+
+  let token;
+  try {
+    token = jwt.sign(
+      { userId: existingUser.id, email: existingUser.email },
+      process.env.JWT_PRIVATE_KEY,
+      { expiresIn: '1h' }
+    );
+  } catch (err) {
+    console.log(err);
+    const error = new HttpError(
+      'Unable to login user. Please try again later.',
+      500
+    );
     return next(error);
   }
 
-  res
-    .status(200)
-    .json({
-      message: 'Successfully logged in.',
-      user: existingUser.toObject({ getters: true }),
-    });
+  const userData = {
+    userId: existingUser.id,
+    name: existingUser.name,
+    email: existingUser.email,
+    imageUrl: existingUser.imageUrl,
+    places: existingUser.places,
+  };
+
+  res.status(200).json({
+    message: 'Successfully logged in.',
+    user: userData,
+    token: token,
+  });
 };
