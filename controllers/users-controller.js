@@ -8,7 +8,7 @@ require('dotenv').config();
 exports.getUsers = async (req, res, next) => {
   let users;
   try {
-    users = await User.find({}, 'email places imageUrl name');
+    users = await User.find({}, '-password');
   } catch (err) {
     console.log(err);
     const error = new HttpError(
